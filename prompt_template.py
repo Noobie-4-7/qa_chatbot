@@ -52,7 +52,7 @@ if input_text:
     # st.write(llm_chain.invoke({"text": input_text}).content)
     # Execute both chains in sequence
     general_info = chain1.invoke({"text": input_text}).content
-    birth_date = chain2.invoke({"name": general_info}).content
+    birth_date = chain2.invoke({"general_info": general_info}).content
     
     # Display both responses
     st.subheader("General Information:")
