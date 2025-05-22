@@ -3,6 +3,7 @@ import os
 from langchain_core.prompts import ChatPromptTemplate
 # from langchain import PromptTemplate
 from langchain.chains import LLMChain
+from langchain_google_genai import ChatGoogleGenerativeAI
 # import getpass
 # if "GOOGLE_API_KEY" not in os.environ:
 #     os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google AI API key: ")
@@ -12,7 +13,11 @@ from langchain_core.prompts import ChatPromptTemplate
 st.title("Celibrity search engine")
 input_text = st.text_input("Enter the name of the celebrity")
 
-# First prompt to get general information
+# prompt_template = PromptTemplate(
+#     input_variables=["text"],
+#     template="Tell me about the celebrity: {text}"
+# )
+
 prompt_template = ChatPromptTemplate.from_messages(
     [
         ("system", "Tell me about the celebrity: {text}"),
@@ -23,12 +28,10 @@ prompt_template = ChatPromptTemplate.from_messages(
 # Second prompt to get birth date
 prompt_template2 = ChatPromptTemplate.from_messages(
     [
-        ("system", "What is the date of birth of the celebrity: {name}"),
-        ("human", "{name}")
+        ("system", "What is the date of birth of the celebrity: {general_info}"),
+        ("human", "{general_info}")
     ]
 )
-
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature= 0.8, top_p= 0.95, google_api_key=os.environ["GEMINI_API_KEY"])
 # GENERATION CONFIG IS NOT SUPPORTED IN LANGCHAIN GEMINI
@@ -49,7 +52,7 @@ if input_text:
     # st.write(llm_chain.invoke({"text": input_text}).content)
     # Execute both chains in sequence
     general_info = chain1.invoke({"text": input_text}).content
-    birth_date = chain2.invoke({"name": input_text}).content
+    birth_date = chain2.invoke({"name": general_info}).content
     
     # Display both responses
     st.subheader("General Information:")
