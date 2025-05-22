@@ -1,8 +1,10 @@
+# We can use the same app_openai code if we use from langchain_google_genai import ChatGoogleGenerativeAI
+# and create the model using llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+
 import streamlit as st
 from google import genai
 from google.genai import types
 import google.generativeai as genai
-from langchain.schema import HumanMessage, SystemMessage, AIMessage
 import os
 from dotenv import load_dotenv
 
@@ -41,17 +43,45 @@ if 'messages' not in st.session_state:
     ]
 
 def get_response(question):
-    # Add user question to history
-    st.session_state.messages.append({"role": "user", "content": question})
-    # Generate response - format messages properly for Gemini
-    chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages])
+    """
+    Handles the chat interaction flow:
+    1. Stores user messages in session state
+    2. Generates AI response using Gemini
+    3. Stores AI response in session state
+    
+    st.session_state is Streamlit's way of maintaining state between reruns.
+    st.session_state.messages is a list that stores the entire chat history as dictionaries with:
+    - 'role': either 'user', 'assistant', or 'system'
+    - 'content': the actual message text
+    
+    The list grows with each interaction, maintaining conversation context.
+    """
+    
+    # Store user message in session state
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": question
+    })
+    
+    # Format entire chat history for Gemini
+    chat_history = "\n".join([
+        f"{msg['role']}: {msg['content']}" 
+        for msg in st.session_state.messages
+    ])
+    
+    # Get AI response from Gemini
     response = model.generate_content(
         chat_history,
         generation_config=generation_config
     )
     assistant_reply = response.text
-    # Add assistant reply to history
-    st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+    
+    # Store AI response in session state
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": assistant_reply
+    })
+    
     return assistant_reply
 
 input = st.text_input("Enter your question:")
