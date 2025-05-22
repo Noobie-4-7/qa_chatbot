@@ -12,21 +12,19 @@ from langchain_core.prompts import ChatPromptTemplate
 st.title("Celibrity search engine")
 input_text = st.text_input("Enter the name of the celebrity")
 
-# prompt_template = PromptTemplate(
-#     input_variables=["text"],
-#     template="Tell me about the celebrity: {text}"
-# )
-
+# First prompt to get general information
 prompt_template = ChatPromptTemplate.from_messages(
     [
-        (
-            "system",
-            "Tell me about the celebrity: {text}"
-        ),
-        (
-            "human",
-            "{text}"
-        )
+        ("system", "Tell me about the celebrity: {text}"),
+        ("human", "{text}")
+    ]
+)
+
+# Second prompt to get birth date
+prompt_template2 = ChatPromptTemplate.from_messages(
+    [
+        ("system", "What is the date of birth of the celebrity: {name}"),
+        ("human", "{name}")
     ]
 )
 
@@ -39,12 +37,26 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature= 0.8, top_p= 
 #     "top_p": 0.95
 # }
 
+# Create chains for both prompts
+chain1 = prompt_template | llm
+chain2 = prompt_template2 | llm
+
 # llm_chain = LLMChain(llm=llm, prompt=prompt_template, generation_config=generation_config, verbose=True)
-llm_chain = prompt_template | llm
+# llm_chain = prompt_template | llm
 
 # This method is typically used when the model expects input in a structured format (like a dictionary).
 if input_text:
-    st.write(llm_chain.invoke({"text": input_text}).content)
+    # st.write(llm_chain.invoke({"text": input_text}).content)
+    # Execute both chains in sequence
+    general_info = chain1.invoke({"text": input_text}).content
+    birth_date = chain2.invoke({"name": input_text}).content
+    
+    # Display both responses
+    st.subheader("General Information:")
+    st.write(general_info)
+    
+    st.subheader("Birth Date:")
+    st.write(birth_date)
 
 # This method is typically used when the model expects input in a free-form text format.
 # if input_text:
